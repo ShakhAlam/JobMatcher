@@ -1,20 +1,15 @@
 # Job Matcher frontend
 
-React + TypeScript + MUI app (Vite). In development, `/api` is proxied to the backend at
-`http://localhost:8000` (override with `JOBMATCHER_API_URL`).
+React + TypeScript + MUI single-page app built with Vite. See the project [README](../README.md),
+[Getting started](../docs/getting-started.md) and [Architecture](../docs/architecture.md#frontend).
 
 ```bash
 npm install
-npm run dev       # http://localhost:5173
+npm run dev       # http://localhost:5173 (proxies /api to http://localhost:8000)
 npm test          # Vitest + Testing Library
 npm run lint      # oxlint
 npm run format    # Prettier
-npm run build     # type-check and production build
+npm run build     # type-check and production build into dist/
 ```
 
-Structure:
-
-- `src/theme/` – dark/light MUI theme (dark by default; choice saved in localStorage)
-- `src/layout/` – app bar, collapsible sidebar, page shell
-- `src/pages/` – Score, History, Profile, Settings
-- `src/api/` – fetch wrapper that surfaces FastAPI error details
+Set `JOBMATCHER_API_URL` to proxy `/api` to a backend other than `http://localhost:8000`.

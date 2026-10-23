@@ -1,0 +1,8 @@
+# Check out text files with LF on every OS, matching Prettier's line endings, so a fresh clone
+# on Windows (core.autocrlf=true) doesn't show every file as changed after `npm run format`.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.db binary
