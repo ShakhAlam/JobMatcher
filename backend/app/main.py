@@ -2,19 +2,27 @@
 
 from contextlib import asynccontextmanager
 
+import httpx
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import extract, score
+from app.api import extract, score, settings
 from app.config import get_settings
 from app.llm.factory import build_configurable_llm
 from app.scoring.graph import ScoringGraph
+from app.store.db import KeyValueStore
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.scoring_graph = ScoringGraph(build_configurable_llm())
+    config = get_settings()
+    app.state.chat_model = build_configurable_llm()
+    app.state.scoring_graph = ScoringGraph(app.state.chat_model)
+    app.state.store = KeyValueStore(config.db_path)
+    app.state.http_client = httpx.AsyncClient(timeout=15)
     yield
+    await app.state.http_client.aclose()
+    app.state.store.close()
 
 
 app = FastAPI(title="Job Matcher", version="0.1.0", lifespan=lifespan)
@@ -26,6 +34,7 @@ app.add_middleware(
 )
 app.include_router(score.router, prefix="/api", tags=["scoring"])
 app.include_router(extract.router, prefix="/api", tags=["documents"])
+app.include_router(settings.router, prefix="/api", tags=["settings"])
 
 
 @app.get("/api/health")

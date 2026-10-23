@@ -1,13 +1,16 @@
 import logging
 import time
 
-import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 
+from app import user_settings
+from app.api.deps import get_store
 from app.config import Settings, get_settings
+from app.llm.errors import describe_llm_error
 from app.llm.factory import LLMConfigError, resolve_llm_config, to_runnable_config
 from app.scoring.graph import ScoringGraph
-from app.scoring.schemas import LLMProvider, MatchResult, ModelInfo, ScoreRequest
+from app.scoring.schemas import MatchResult, ModelInfo, ScoreRequest
+from app.store.db import KeyValueStore
 
 logger = logging.getLogger(__name__)
 
@@ -23,10 +26,12 @@ async def score_resume(
     body: ScoreRequest,
     graph: ScoringGraph = Depends(get_scoring_graph),
     settings: Settings = Depends(get_settings),
+    store: KeyValueStore = Depends(get_store),
 ) -> MatchResult:
-    llm_cfg = resolve_llm_config(body.llm, settings)
+    # Without an explicit model in the request, use the one chosen on the Settings page.
+    llm_cfg = resolve_llm_config(body.llm, settings, user_settings.load(store, settings))
     try:
-        config = to_runnable_config(llm_cfg, settings)
+        config = to_runnable_config(llm_cfg, settings, user_settings.saved_api_keys(store))
     except LLMConfigError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -35,24 +40,10 @@ async def score_resume(
         state = await graph.ainvoke(body.job_description, body.resume, config, weights=body.weights)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    except httpx.RemoteProtocolError as exc:
-        raise HTTPException(
-            status_code=502,
-            detail=f"{llm_cfg.provider.value} closed the connection before answering (was it stopped or restarted?).",
-        ) from exc
-    except httpx.ConnectError as exc:
-        where = config["configurable"].get("base_url") or llm_cfg.provider.value
-        if llm_cfg.provider is LLMProvider.OLLAMA:
-            detail = f"Cannot reach Ollama at {where}. Is `ollama serve` running?"
-        else:
-            detail = f"Cannot reach {where}: {exc}"
-        raise HTTPException(status_code=502, detail=detail) from exc
     except Exception as exc:
         logger.exception("Scoring failed with %s/%s", llm_cfg.provider.value, llm_cfg.model)
-        raise HTTPException(
-            status_code=502,
-            detail=f"{llm_cfg.provider.value} model '{llm_cfg.model}' failed: {type(exc).__name__}: {exc}",
-        ) from exc
+        detail = describe_llm_error(exc, llm_cfg, config["configurable"].get("base_url"))
+        raise HTTPException(status_code=502, detail=detail) from exc
     duration_ms = round((time.perf_counter() - started) * 1000)
 
     assessment = state["assessment"]

@@ -1,6 +1,15 @@
 /** Thin fetch wrapper for the FastAPI backend. In dev, Vite proxies /api to the backend. */
 
-import type { ExtractResult, MatchResult, ScoreRequest } from './types'
+import type {
+  ConnectionResult,
+  ExtractResult,
+  LLMProvider,
+  MatchResult,
+  ModelList,
+  ScoreRequest,
+  SettingsUpdate,
+  UserSettings,
+} from './types'
 
 export class ApiError extends Error {
   readonly status: number
@@ -62,3 +71,20 @@ export function extractText(file: File, signal?: AbortSignal) {
   form.append('file', file)
   return apiFetch<ExtractResult>('/extract-text', { method: 'POST', body: form, signal })
 }
+
+const json = (method: string, body: unknown): RequestInit => ({
+  method,
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(body),
+})
+
+export const getSettings = () => apiFetch<UserSettings>('/settings')
+
+export const updateSettings = (change: SettingsUpdate) => apiFetch<UserSettings>('/settings', json('PUT', change))
+
+/** Keys go in the POST body, never the URL. Unsaved form values let the list load before saving. */
+export const listModels = (params: { provider: LLMProvider; api_key?: string; ollama_base_url?: string }) =>
+  apiFetch<ModelList>('/models', json('POST', params))
+
+export const testConnection = (params: { provider: LLMProvider; model: string; api_key?: string; base_url?: string }) =>
+  apiFetch<ConnectionResult>('/settings/test', json('POST', params))

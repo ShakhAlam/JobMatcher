@@ -1,4 +1,4 @@
-import type { MatchResult } from '../api/types'
+import type { MatchResult, ModelList, UserSettings } from '../api/types'
 
 const criterion = (key: string, label: string, weight: number, score: number) => ({
   key,
@@ -58,3 +58,21 @@ export const matchResult: MatchResult = {
 
 export const JD_TEXT = 'Senior Java Developer. Requires Java, Spring, SQL and 5+ years of experience.'
 export const RESUME_TEXT = 'Alex Rivera. Senior engineer, 8 years of Java and Spring Boot at PayStream.'
+
+export const userSettings: UserSettings = {
+  provider: 'ollama',
+  models: { ollama: 'qwen2.5-coder:14b', anthropic: 'claude-sonnet-5-5', openai: 'gpt-5-mini' },
+  ollama_base_url: 'http://localhost:11434',
+  temperature: 0,
+  api_keys: { anthropic: { source: null, masked: null }, openai: { source: null, masked: null } },
+}
+
+export const ollamaModels: ModelList = {
+  provider: 'ollama',
+  models: [
+    { id: 'llama3.1:8b', label: 'llama3.1:8b', detail: '8.0B · Q4_K_M · 4.9 GB', size_bytes: 4920753328 },
+    { id: 'qwen2.5-coder:14b', label: 'qwen2.5-coder:14b', detail: '14.8B · Q4_K_M · 9.0 GB', size_bytes: 8988124298 },
+  ],
+  source: 'live',
+  error: null,
+}

@@ -81,6 +81,59 @@ export interface ExtractResult {
   warnings: string[]
 }
 
+// --- Settings (backend/app/user_settings.py, app/api/settings.py, app/llm/catalog.py) ---
+
+export type HostedProvider = Exclude<LLMProvider, 'ollama'>
+
+export interface ApiKeyStatus {
+  /** Where the key in use comes from; null when there is none. */
+  source: 'saved' | 'env' | null
+  masked: string | null
+}
+
+export interface UserSettings {
+  provider: LLMProvider
+  models: Record<LLMProvider, string>
+  ollama_base_url: string
+  temperature: number
+  api_keys: Record<HostedProvider, ApiKeyStatus>
+}
+
+export interface SettingsUpdate {
+  provider?: LLMProvider
+  models?: Partial<Record<LLMProvider, string>>
+  ollama_base_url?: string
+  temperature?: number
+  /** A string saves a key; null removes the saved key. */
+  api_keys?: Partial<Record<HostedProvider, string | null>>
+}
+
+export interface ModelOption {
+  id: string
+  label: string
+  detail: string | null
+  size_bytes: number | null
+}
+
+export interface ModelList {
+  provider: LLMProvider
+  models: ModelOption[]
+  source: 'live' | 'suggested'
+  error: string | null
+}
+
+export interface ConnectionResult {
+  ok: boolean
+  message: string
+  latency_ms: number | null
+}
+
+export const PROVIDER_NAMES: Record<LLMProvider, string> = {
+  ollama: 'Ollama',
+  anthropic: 'Claude',
+  openai: 'OpenAI',
+}
+
 /** Backend input limits (ScoreRequest field constraints). */
 export const MIN_INPUT_CHARS = 20
 export const MAX_INPUT_CHARS = 50_000

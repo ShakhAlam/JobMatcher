@@ -1,9 +1,13 @@
 import { lazy, Suspense, useEffect, useRef } from 'react'
 import AutoAwesomeOutlined from '@mui/icons-material/AutoAwesomeOutlined'
 import RestartAltOutlined from '@mui/icons-material/RestartAltOutlined'
-import { Alert, Button, CircularProgress, Grid, Stack, Typography } from '@mui/material'
-import { MIN_INPUT_CHARS } from '../api/types'
+import { Alert, Box, Button, CircularProgress, Grid, Stack, Typography } from '@mui/material'
+import { useQuery } from '@tanstack/react-query'
+import { getSettings } from '../api/client'
+import { SETTINGS_QUERY_KEY } from '../api/queryKeys'
+import { MIN_INPUT_CHARS, PROVIDER_NAMES } from '../api/types'
 import PageHeader from '../components/PageHeader'
+import ActiveModelChip from '../score/ActiveModelChip'
 import DocumentInput from '../score/DocumentInput'
 import ScoreProgress from '../score/ScoreProgress'
 import { useScoreWorkspace } from '../score/workspace'
@@ -28,11 +32,15 @@ export default function ScorePage() {
   const running = status === 'running'
   const resultRef = useRef<HTMLDivElement>(null)
 
+  const { data: settings } = useQuery({ queryKey: SETTINGS_QUERY_KEY, queryFn: getSettings })
+  const hosted = settings && settings.provider !== 'ollama' ? settings.provider : null
+  const keyMissing = hosted !== null && settings?.api_keys[hosted].source === null
+
   const missing = [
     jobDescription.trim().length < MIN_INPUT_CHARS && 'a job description',
     resume.trim().length < MIN_INPUT_CHARS && 'a resume',
   ].filter(Boolean)
-  const canScore = missing.length === 0 && !running
+  const canScore = missing.length === 0 && !running && !keyMissing
 
   // Bring a fresh result into view once scoring finishes.
   const previousStatus = useRef(status)
@@ -83,7 +91,14 @@ export default function ScorePage() {
         spacing={2}
         sx={{ alignItems: { sm: 'center' }, justifyContent: 'flex-end', my: 3 }}
       >
-        {!running && missing.length > 0 && (
+        {settings && <ActiveModelChip settings={settings} keyMissing={keyMissing} />}
+        <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }} />
+        {!running && keyMissing && hosted && (
+          <Typography variant="body2" color="text.secondary">
+            Add a {PROVIDER_NAMES[hosted]} API key in Settings to score.
+          </Typography>
+        )}
+        {!running && !keyMissing && missing.length > 0 && (
           <Typography variant="body2" color="text.secondary">
             Add {missing.join(' and ')} to score.
           </Typography>

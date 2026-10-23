@@ -18,5 +18,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: false,
+    // Above Testing Library's 5s findBy timeout so a slow query fails with its own message.
+    testTimeout: 15_000,
   },
 })

@@ -29,6 +29,9 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
 
+    # Local SQLite file for saved settings and API keys (relative to the backend folder).
+    db_path: str = "data/jobmatcher.db"
+
 
 @lru_cache
 def get_settings() -> Settings:
