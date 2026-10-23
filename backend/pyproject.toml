@@ -14,10 +14,14 @@ dependencies = [
     "langchain-ollama>=1.0",
     "langchain-anthropic>=1.0",
     "langchain-openai>=1.0",
+    "pypdf>=6.21.2",
+    "python-docx>=1.2.0",
+    "python-multipart>=0.0.32",
 ]
 
 [dependency-groups]
 dev = [
+    "fpdf2>=2.8.9",
     "pytest>=8.3",
     "pytest-asyncio>=1.4.0",
 ]
