@@ -13,7 +13,7 @@ from langchain_core.runnables import RunnableConfig
 from app.config import Settings
 from app.scoring.schemas import LLMConfig, LLMProvider
 
-CONFIGURABLE_FIELDS = ("model", "model_provider", "temperature", "api_key", "base_url", "num_ctx", "max_tokens")
+CONFIGURABLE_FIELDS = ("model", "model_provider", "temperature", "api_key", "base_url", "num_ctx", "num_predict", "max_tokens")
 
 _KEY_ENV_VARS = {
     LLMProvider.ANTHROPIC: "ANTHROPIC_API_KEY",
@@ -64,6 +64,7 @@ def to_runnable_config(cfg: LLMConfig, settings: Settings) -> RunnableConfig:
     if cfg.provider is LLMProvider.OLLAMA:
         configurable["base_url"] = cfg.base_url or settings.ollama_base_url
         configurable["num_ctx"] = settings.ollama_num_ctx
+        configurable["num_predict"] = settings.max_output_tokens
     else:
         configurable["api_key"] = _api_key(cfg, settings)
         configurable["max_tokens"] = settings.max_output_tokens

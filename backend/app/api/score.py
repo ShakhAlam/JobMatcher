@@ -35,6 +35,11 @@ async def score_resume(
         state = await graph.ainvoke(body.job_description, body.resume, config, weights=body.weights)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except httpx.RemoteProtocolError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"{llm_cfg.provider.value} closed the connection before answering (was it stopped or restarted?).",
+        ) from exc
     except httpx.ConnectError as exc:
         where = config["configurable"].get("base_url") or llm_cfg.provider.value
         if llm_cfg.provider is LLMProvider.OLLAMA:
@@ -58,7 +63,8 @@ async def score_resume(
         criteria=state["criteria"],
         strengths=assessment.strengths,
         gaps=assessment.gaps,
-        recommendations=assessment.recommendations,
+        resume_tips=assessment.resume_tips,
+        skills_to_build=assessment.skills_to_build,
         requirements=state["requirements"],
         candidate=state["candidate"],
         model_used=ModelInfo(provider=llm_cfg.provider, model=llm_cfg.model),

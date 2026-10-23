@@ -1,15 +1,12 @@
 import { alpha, createTheme } from '@mui/material/styles'
 
-// Score bands shared by charts and chips (matches the backend's verdict thresholds).
-export const scoreBands = [
-  { min: 80, label: 'Strong match', color: '#10b981' },
-  { min: 65, label: 'Good match', color: '#22c55e' },
-  { min: 45, label: 'Partial match', color: '#f59e0b' },
-  { min: 0, label: 'Poor match', color: '#ef4444' },
-] as const
-
-export function bandFor(score: number) {
-  return scoreBands.find((band) => score >= band.min) ?? scoreBands[scoreBands.length - 1]
+declare module '@mui/material/styles' {
+  interface Palette {
+    chart: { bar: string }
+  }
+  interface PaletteOptions {
+    chart?: { bar: string }
+  }
 }
 
 export const theme = createTheme({
@@ -22,6 +19,8 @@ export const theme = createTheme({
         background: { default: '#0b1020', paper: '#111830' },
         divider: alpha('#94a3b8', 0.16),
         text: { primary: '#e2e8f0', secondary: '#94a3b8' },
+        // Data marks use their own step: the UI teal is too light for the dark lightness band.
+        chart: { bar: '#19a89a' },
       },
     },
     light: {
@@ -31,6 +30,7 @@ export const theme = createTheme({
         background: { default: '#f5f7fb', paper: '#ffffff' },
         divider: alpha('#0f172a', 0.1),
         text: { primary: '#0f172a', secondary: '#475569' },
+        chart: { bar: '#0d9488' },
       },
     },
   },

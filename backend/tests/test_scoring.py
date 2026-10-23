@@ -62,6 +62,7 @@ def test_ollama_config_has_no_api_key(test_settings):
     assert configurable["model_provider"] == "ollama"
     assert configurable["base_url"] == test_settings.ollama_base_url
     assert configurable["num_ctx"] == test_settings.ollama_num_ctx
+    assert configurable["num_predict"] == test_settings.max_output_tokens
     assert "api_key" not in configurable
 
 
@@ -75,3 +76,4 @@ def test_hosted_provider_uses_request_key(test_settings):
     configurable = to_runnable_config(cfg, test_settings)["configurable"]
     assert configurable["api_key"] == "sk-test"
     assert "num_ctx" not in configurable
+    assert "num_predict" not in configurable

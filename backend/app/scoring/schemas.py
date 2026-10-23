@@ -131,8 +131,18 @@ class MatchAssessment(BaseModel):
     summary: str = Field(description="Three or four sentence overall assessment of the fit.")
     strengths: list[str] = Field(description="Candidate's strongest points for this job.")
     gaps: list[str] = Field(description="Most important gaps for this job.")
-    recommendations: list[str] = Field(
-        description="Concrete, truthful ways the candidate could tailor the resume for this job."
+    # Two separate lists so "add X to your resume" for an X the candidate lacks has nowhere to go.
+    resume_tips: list[str] = Field(
+        description=(
+            "Ways to reword, reorder or surface experience the resume ALREADY shows so it maps to the job. "
+            "Each tip must refer to something present in the resume."
+        )
+    )
+    skills_to_build: list[str] = Field(
+        description=(
+            "Required skills, certifications or experience the candidate lacks and would need to gain. "
+            "Phrase as learning or earning, never as adding to the resume."
+        )
     )
 
 
@@ -184,7 +194,8 @@ class MatchResult(BaseModel):
     criteria: list[CriterionScore]
     strengths: list[str]
     gaps: list[str]
-    recommendations: list[str]
+    resume_tips: list[str]
+    skills_to_build: list[str]
     requirements: JobRequirements
     candidate: CandidateProfile
     model_used: ModelInfo

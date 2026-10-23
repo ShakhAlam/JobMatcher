@@ -12,12 +12,15 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="JOBMATCHER_", env_file=".env", extra="ignore")
 
     default_provider: LLMProvider = LLMProvider.OLLAMA
-    default_model: str = "glm-4.7-flash:q4_K_M"
+    # Fits fully in a 16 GB GPU with the 16k context below; larger models spill to CPU and crawl.
+    default_model: str = "qwen2.5-coder:14b"
     default_temperature: float = 0.0
 
     ollama_base_url: str = "http://localhost:11434"
     # Ollama's default context window is small enough to silently truncate a long resume + JD.
     ollama_num_ctx: int = 16384
+    # Caps every model's output (num_predict for Ollama) so a runaway generation ends instead of
+    # filling the whole context.
     max_output_tokens: int = 4096
 
     # Fallback keys; requests may also pass a key. Standard provider env vars are honoured too.

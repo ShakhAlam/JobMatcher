@@ -12,6 +12,22 @@ export function stubFetch(status = 200, body: unknown = { status: 'ok' }) {
   return fetchMock
 }
 
+type RouteHandler = (init: RequestInit | undefined) => Response | Promise<Response>
+
+export const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status })
+
+/** Stub fetch with per-path handlers (e.g. '/api/score'); unknown paths answer 404. */
+export function mockApi(handlers: Record<string, RouteHandler>) {
+  const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const handler = handlers[String(input)]
+    if (handler) return handler(init)
+    if (String(input) === '/api/health') return json({ status: 'ok' })
+    return json({ detail: 'Not found' }, 404)
+  })
+  vi.stubGlobal('fetch', fetchMock)
+  return fetchMock
+}
+
 export function renderApp(path = '/') {
   const router = createMemoryRouter(routes, { initialEntries: [path] })
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })

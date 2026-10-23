@@ -34,7 +34,8 @@ CANNED = {
         summary="Solid fit.",
         strengths=["Java depth"],
         gaps=["No Kubernetes"],
-        recommendations=["Quantify throughput"],
+        resume_tips=["Quantify throughput"],
+        skills_to_build=["Earn the Oracle Java certification"],
     ),
 }
 

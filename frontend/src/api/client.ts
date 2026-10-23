@@ -1,5 +1,7 @@
 /** Thin fetch wrapper for the FastAPI backend. In dev, Vite proxies /api to the backend. */
 
+import type { ExtractResult, MatchResult, ScoreRequest } from './types'
+
 export class ApiError extends Error {
   readonly status: number
 
@@ -24,7 +26,9 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   let res: Response
   try {
     res = await fetch(`/api${path}`, init)
-  } catch {
+  } catch (error) {
+    // Let callers tell a user-initiated cancel apart from a network failure.
+    if (error instanceof DOMException && error.name === 'AbortError') throw error
     throw new ApiError(0, 'Cannot reach the Job Matcher API. Is the backend running?')
   }
   if (!res.ok) {
@@ -44,3 +48,17 @@ export interface Health {
 }
 
 export const getHealth = () => apiFetch<Health>('/health')
+
+export const scoreResume = (body: ScoreRequest, signal?: AbortSignal) =>
+  apiFetch<MatchResult>('/score', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    signal,
+  })
+
+export function extractText(file: File, signal?: AbortSignal) {
+  const form = new FormData()
+  form.append('file', file)
+  return apiFetch<ExtractResult>('/extract-text', { method: 'POST', body: form, signal })
+}

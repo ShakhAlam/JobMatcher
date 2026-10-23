@@ -20,8 +20,10 @@ def test_score_endpoint_returns_full_result(client, fake_llm):
         "missing": [],
     }
     assert body["strengths"] == ["Java depth"]
+    assert body["resume_tips"] == ["Quantify throughput"]
+    assert body["skills_to_build"] == ["Earn the Oracle Java certification"]
     assert body["requirements"]["title"] == "Senior Java Developer"
-    assert body["model_used"] == {"provider": "ollama", "model": "glm-4.7-flash:q4_K_M"}
+    assert body["model_used"] == {"provider": "ollama", "model": "qwen2.5-coder:14b"}
     # Server defaults reach the model through RunnableConfig.
     assert all(cfg["model_provider"] == "ollama" for _, cfg in fake_llm.calls)
 
