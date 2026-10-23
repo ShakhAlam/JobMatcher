@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Score how well a resume matches a job description." />
+    <title>Job Matcher</title>
+    <script>
+      // Apply the saved color mode before React loads so dark mode doesn't flash white.
+      ;(function () {
+        var mode = 'dark'
+        try {
+          mode = localStorage.getItem('jobmatcher.color-mode') || 'dark'
+        } catch (e) {}
+        if (mode === 'system') {
+          mode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        }
+        document.documentElement.classList.add(mode)
+        document.documentElement.style.backgroundColor = mode === 'dark' ? '#0b1020' : '#f5f7fb'
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
