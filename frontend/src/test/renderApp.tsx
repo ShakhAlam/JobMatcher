@@ -4,7 +4,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router'
 import { vi } from 'vitest'
 import AppProviders from '../AppProviders'
 import { routes } from '../routes'
-import { ollamaModels, userSettings } from './fixtures'
+import { emptyProfile, ollamaModels, userSettings } from './fixtures'
 
 /** Stub fetch: the health check answers with the given status and body; settings and models get fixtures. */
 export function stubFetch(status = 200, body: unknown = { status: 'ok' }) {
@@ -18,6 +18,7 @@ export const json = (body: unknown, status = 200) => new Response(JSON.stringify
 const defaultHandlers: Record<string, RouteHandler> = {
   '/api/health': () => json({ status: 'ok' }),
   '/api/settings': () => json(userSettings),
+  '/api/profile': () => json(emptyProfile),
   '/api/models': (init) => {
     const { provider } = JSON.parse(String(init?.body))
     if (provider === 'ollama') return json(ollamaModels)

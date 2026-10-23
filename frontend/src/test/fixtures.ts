@@ -1,4 +1,4 @@
-import type { MatchResult, ModelList, UserSettings } from '../api/types'
+import type { MatchResult, ModelList, Profile, UserSettings } from '../api/types'
 
 const criterion = (key: string, label: string, weight: number, score: number) => ({
   key,
@@ -58,6 +58,15 @@ export const matchResult: MatchResult = {
 
 export const JD_TEXT = 'Senior Java Developer. Requires Java, Spring, SQL and 5+ years of experience.'
 export const RESUME_TEXT = 'Alex Rivera. Senior engineer, 8 years of Java and Spring Boot at PayStream.'
+
+export const emptyProfile: Profile = {
+  name: '',
+  email: null,
+  headline: '',
+  default_resume: '',
+  default_resume_filename: null,
+  updated_at: null,
+}
 
 export const userSettings: UserSettings = {
   provider: 'ollama',

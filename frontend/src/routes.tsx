@@ -1,5 +1,6 @@
 import type { RouteObject } from 'react-router'
 import AppShell from './layout/AppShell'
+import HistoryDetailPage from './pages/HistoryDetailPage'
 import HistoryPage from './pages/HistoryPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ProfilePage from './pages/ProfilePage'
@@ -18,6 +19,7 @@ export const routes: RouteObject[] = [
         children: [
           { index: true, element: <ScorePage /> },
           { path: 'history', element: <HistoryPage /> },
+          { path: 'history/:id', element: <HistoryDetailPage /> },
           { path: 'profile', element: <ProfilePage /> },
           { path: 'settings', element: <SettingsPage /> },
           { path: '*', element: <NotFoundPage /> },

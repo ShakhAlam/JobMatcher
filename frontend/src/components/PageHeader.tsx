@@ -14,7 +14,7 @@ export default function PageHeader({ title, subtitle, actions }: PageHeaderProps
       spacing={2}
       sx={{ alignItems: { sm: 'flex-end' }, justifyContent: 'space-between', mb: 3 }}
     >
-      <Box>
+      <Box sx={{ minWidth: 0 }}>
         <Typography variant="h4" component="h1">
           {title}
         </Typography>
@@ -24,7 +24,8 @@ export default function PageHeader({ title, subtitle, actions }: PageHeaderProps
           </Typography>
         )}
       </Box>
-      {actions}
+      {/* The text wraps; buttons keep their one-line labels. */}
+      {actions && <Box sx={{ flexShrink: 0, '& .MuiButton-root': { whiteSpace: 'nowrap' } }}>{actions}</Box>}
     </Stack>
   )
 }

@@ -3,7 +3,7 @@ import time
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
-from app import user_settings
+from app import history, user_settings
 from app.api.deps import get_store
 from app.config import Settings, get_settings
 from app.llm.errors import describe_llm_error
@@ -47,7 +47,7 @@ async def score_resume(
     duration_ms = round((time.perf_counter() - started) * 1000)
 
     assessment = state["assessment"]
-    return MatchResult(
+    result = MatchResult(
         overall_score=state["overall_score"],
         verdict=state["verdict"],
         summary=assessment.summary,
@@ -61,3 +61,10 @@ async def score_resume(
         model_used=ModelInfo(provider=llm_cfg.provider, model=llm_cfg.model),
         duration_ms=duration_ms,
     )
+    if body.save_to_history:
+        try:
+            result.history_id = history.add(store, body.job_description, body.resume, result)
+        except Exception:
+            # A history write failure shouldn't throw away a result that took minutes to compute.
+            logger.exception("Could not save the scoring run to history")
+    return result

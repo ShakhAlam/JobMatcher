@@ -15,7 +15,12 @@ export interface ScoreWorkspace {
   startedAt: number | null
   score: () => void
   cancel: () => void
+  /** Clear the job description and result; the resume goes back to the saved default, if any. */
   reset: () => void
+  /** Reopen a past run (from History): its inputs and result. */
+  restore: (run: { jobDescription: string; resume: string; result: MatchResult }) => void
+  /** The default resume saved on the Profile page, if any. */
+  defaultResume: string
 }
 
 export const ScoreWorkspaceContext = createContext<ScoreWorkspace | null>(null)

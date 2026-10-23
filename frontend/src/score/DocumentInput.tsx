@@ -1,4 +1,4 @@
-import { type DragEvent, useId, useRef, useState } from 'react'
+import { type DragEvent, type ReactNode, useId, useRef, useState } from 'react'
 import ClearOutlined from '@mui/icons-material/ClearOutlined'
 import InsertDriveFileOutlined from '@mui/icons-material/InsertDriveFileOutlined'
 import UploadFileOutlined from '@mui/icons-material/UploadFileOutlined'
@@ -25,6 +25,10 @@ interface DocumentInputProps {
   value: string
   onChange: (value: string) => void
   disabled?: boolean
+  /** Extra buttons shown before Upload (e.g. "Use saved resume"). */
+  actions?: ReactNode
+  /** Called with the file name after an upload fills the field. */
+  onFileLoaded?: (filename: string) => void
 }
 
 interface LoadedFile {
@@ -36,7 +40,15 @@ interface LoadedFile {
 const numberFormat = new Intl.NumberFormat()
 
 /** A large textarea that can also be filled by uploading or dropping a PDF, DOCX or text file. */
-export default function DocumentInput({ label, placeholder, value, onChange, disabled }: DocumentInputProps) {
+export default function DocumentInput({
+  label,
+  placeholder,
+  value,
+  onChange,
+  disabled,
+  actions,
+  onFileLoaded,
+}: DocumentInputProps) {
   const fieldId = useId()
   const fileInput = useRef<HTMLInputElement>(null)
   const [extracting, setExtracting] = useState(false)
@@ -59,6 +71,7 @@ export default function DocumentInput({ label, placeholder, value, onChange, dis
     try {
       const extracted = await extractText(file)
       onChange(extracted.text)
+      onFileLoaded?.(extracted.filename)
       const parts = [extracted.file_type.toUpperCase()]
       if (extracted.pages) parts.push(`${extracted.pages} page${extracted.pages === 1 ? '' : 's'}`)
       parts.push(`${numberFormat.format(extracted.char_count)} characters`)
@@ -119,6 +132,7 @@ export default function DocumentInput({ label, placeholder, value, onChange, dis
               if (file) void loadFile(file)
             }}
           />
+          {actions}
           <Button
             size="small"
             variant="outlined"

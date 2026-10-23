@@ -70,6 +70,8 @@ export interface MatchResult {
   candidate: CandidateProfile
   model_used: { provider: LLMProvider; model: string }
   duration_ms: number
+  /** Set when the run was saved to History. */
+  history_id?: number | null
 }
 
 export interface ExtractResult {
@@ -132,6 +134,38 @@ export const PROVIDER_NAMES: Record<LLMProvider, string> = {
   ollama: 'Ollama',
   anthropic: 'Claude',
   openai: 'OpenAI',
+}
+
+// --- Profile and history (backend/app/profile.py, app/history.py) ---
+
+export interface Profile {
+  name: string
+  email: string | null
+  headline: string
+  default_resume: string
+  default_resume_filename: string | null
+  updated_at: string | null
+}
+
+export interface HistorySummary {
+  id: number
+  created_at: string
+  job_title: string
+  candidate: string | null
+  overall_score: number
+  verdict: string
+  model_used: { provider: LLMProvider; model: string }
+}
+
+export interface HistoryEntry extends HistorySummary {
+  job_description: string
+  resume: string
+  result: MatchResult
+}
+
+export interface HistoryPage {
+  items: HistorySummary[]
+  total: number
 }
 
 /** Backend input limits (ScoreRequest field constraints). */

@@ -3,6 +3,7 @@ import AutoAwesomeOutlined from '@mui/icons-material/AutoAwesomeOutlined'
 import RestartAltOutlined from '@mui/icons-material/RestartAltOutlined'
 import { Alert, Box, Button, CircularProgress, Grid, Stack, Typography } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
+import { Link as RouterLink } from 'react-router'
 import { getSettings } from '../api/client'
 import { SETTINGS_QUERY_KEY } from '../api/queryKeys'
 import { MIN_INPUT_CHARS, PROVIDER_NAMES } from '../api/types'
@@ -28,6 +29,7 @@ export default function ScorePage() {
     score,
     cancel,
     reset,
+    defaultResume,
   } = useScoreWorkspace()
   const running = status === 'running'
   const resultRef = useRef<HTMLDivElement>(null)
@@ -82,6 +84,14 @@ export default function ScorePage() {
             value={resume}
             onChange={setResume}
             disabled={running}
+            actions={
+              defaultResume &&
+              resume !== defaultResume && (
+                <Button size="small" onClick={() => setResume(defaultResume)} disabled={running}>
+                  Use saved resume
+                </Button>
+              )
+            }
           />
         </Grid>
       </Grid>
@@ -132,7 +142,16 @@ export default function ScorePage() {
         {result && (
           <div ref={resultRef} style={{ scrollMarginTop: 80, opacity: running ? 0.5 : 1 }}>
             <Suspense fallback={<CircularProgress aria-label="Loading result" sx={{ display: 'block', mx: 'auto' }} />}>
-              <MatchResultView result={result} />
+              <MatchResultView
+                result={result}
+                actions={
+                  result.history_id != null && (
+                    <Button component={RouterLink} to={`/history/${result.history_id}`} color="inherit">
+                      Saved to History
+                    </Button>
+                  )
+                }
+              />
             </Suspense>
           </div>
         )}

@@ -158,6 +158,7 @@ class ScoreRequest(BaseModel):
     weights: dict[str, float] | None = Field(
         default=None, description="Optional per-criterion weight overrides, keyed by criterion key."
     )
+    save_to_history: bool = True
 
     @field_validator("weights")
     @classmethod
@@ -200,3 +201,5 @@ class MatchResult(BaseModel):
     candidate: CandidateProfile
     model_used: ModelInfo
     duration_ms: int
+    # Set when the run was saved to History.
+    history_id: int | None = None

@@ -6,7 +6,7 @@ import httpx
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import extract, score, settings
+from app.api import extract, history, profile, score, settings
 from app.config import get_settings
 from app.llm.factory import build_configurable_llm
 from app.scoring.graph import ScoringGraph
@@ -35,6 +35,8 @@ app.add_middleware(
 app.include_router(score.router, prefix="/api", tags=["scoring"])
 app.include_router(extract.router, prefix="/api", tags=["documents"])
 app.include_router(settings.router, prefix="/api", tags=["settings"])
+app.include_router(profile.router, prefix="/api", tags=["profile"])
+app.include_router(history.router, prefix="/api", tags=["history"])
 
 
 @app.get("/api/health")

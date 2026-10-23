@@ -3,9 +3,12 @@
 import type {
   ConnectionResult,
   ExtractResult,
+  HistoryEntry,
+  HistoryPage,
   LLMProvider,
   MatchResult,
   ModelList,
+  Profile,
   ScoreRequest,
   SettingsUpdate,
   UserSettings,
@@ -49,7 +52,8 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     }
     throw new ApiError(res.status, detailMessage(body, res.statusText || `Request failed (${res.status})`))
   }
-  return (await res.json()) as T
+  // 204 No Content (deletes) has no body to parse.
+  return (res.status === 204 ? undefined : await res.json()) as T
 }
 
 export interface Health {
@@ -88,3 +92,17 @@ export const listModels = (params: { provider: LLMProvider; api_key?: string; ol
 
 export const testConnection = (params: { provider: LLMProvider; model: string; api_key?: string; base_url?: string }) =>
   apiFetch<ConnectionResult>('/settings/test', json('POST', params))
+
+export const getProfile = () => apiFetch<Profile>('/profile')
+
+export const updateProfile = (profile: Omit<Profile, 'updated_at'>) =>
+  apiFetch<Profile>('/profile', json('PUT', profile))
+
+export const listHistory = (limit: number, offset = 0) =>
+  apiFetch<HistoryPage>(`/history?limit=${limit}&offset=${offset}`)
+
+export const getHistoryEntry = (id: number) => apiFetch<HistoryEntry>(`/history/${id}`)
+
+export const deleteHistoryEntry = (id: number) => apiFetch<void>(`/history/${id}`, { method: 'DELETE' })
+
+export const clearHistory = () => apiFetch<void>('/history', { method: 'DELETE' })

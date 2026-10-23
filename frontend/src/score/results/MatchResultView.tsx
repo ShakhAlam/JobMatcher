@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import ContentCopyOutlined from '@mui/icons-material/ContentCopyOutlined'
 import { Button, Card, CardContent, Snackbar, Stack, Typography } from '@mui/material'
 import type { MatchResult } from '../../api/types'
@@ -8,7 +8,15 @@ import InsightLists from './InsightLists'
 import ScoreSummary from './ScoreSummary'
 import { resultToMarkdown } from './toMarkdown'
 
-export default function MatchResultView({ result }: { result: MatchResult }) {
+interface MatchResultViewProps {
+  result: MatchResult
+  /** Heading for the section; History shows the run's date here instead. */
+  title?: string
+  /** Extra buttons beside "Copy report". */
+  actions?: ReactNode
+}
+
+export default function MatchResultView({ result, title = 'Result', actions }: MatchResultViewProps) {
   const [copied, setCopied] = useState<string | null>(null)
 
   async function copyReport() {
@@ -22,10 +30,11 @@ export default function MatchResultView({ result }: { result: MatchResult }) {
 
   return (
     <Stack spacing={2} component="section" aria-label="Match result">
-      <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
-        <Typography variant="h5" component="h2">
-          Result
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap', rowGap: 1 }}>
+        <Typography variant="h5" component="h2" sx={{ flexGrow: 1 }}>
+          {title}
         </Typography>
+        {actions}
         <Button startIcon={<ContentCopyOutlined />} onClick={copyReport}>
           Copy report
         </Button>

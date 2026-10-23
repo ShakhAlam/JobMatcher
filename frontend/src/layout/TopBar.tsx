@@ -19,6 +19,10 @@ import {
 import { Link as RouterLink } from 'react-router'
 import ApiStatusChip from '../components/ApiStatusChip'
 import ThemeToggle from '../components/ThemeToggle'
+import { useQuery } from '@tanstack/react-query'
+import { getProfile } from '../api/client'
+import { PROFILE_QUERY_KEY } from '../api/queryKeys'
+import { initials } from '../components/initials'
 
 interface TopBarProps {
   onMenuClick: () => void
@@ -27,6 +31,8 @@ interface TopBarProps {
 export default function TopBar({ onMenuClick }: TopBarProps) {
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null)
   const closeMenu = () => setMenuAnchor(null)
+  const { data: profile } = useQuery({ queryKey: PROFILE_QUERY_KEY, queryFn: getProfile })
+  const userInitials = initials(profile?.name)
 
   return (
     <AppBar position="fixed" sx={(theme) => ({ zIndex: theme.zIndex.drawer + 1 })}>
@@ -69,8 +75,8 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
         <ThemeToggle />
         <Tooltip title="Account">
           <IconButton aria-label="Open account menu" onClick={(e) => setMenuAnchor(e.currentTarget)} sx={{ p: 0.5 }}>
-            <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
-              <PersonOutlined fontSize="small" />
+            <Avatar sx={{ width: 32, height: 32, fontSize: 14, bgcolor: 'secondary.main' }}>
+              {userInitials || <PersonOutlined fontSize="small" />}
             </Avatar>
           </IconButton>
         </Tooltip>

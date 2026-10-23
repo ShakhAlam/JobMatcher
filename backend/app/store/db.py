@@ -1,6 +1,7 @@
-"""Small SQLite key/value store for app data that must survive restarts (user settings, keys).
+"""Small SQLite store for app data that must survive restarts.
 
-One local file, one user: a key/value table keeps it simple. Values are JSON.
+One local file, one user. Most data lives in a JSON key/value table; features that need queries
+(score history) create their own tables through ``execute``/``fetch``.
 """
 
 import json
@@ -16,6 +17,7 @@ class KeyValueStore:
             Path(path).parent.mkdir(parents=True, exist_ok=True)
         # FastAPI runs sync dependencies in a threadpool, so share one connection behind a lock.
         self._conn = sqlite3.connect(str(path), check_same_thread=False)
+        self._conn.row_factory = sqlite3.Row
         self._lock = threading.Lock()
         with self._lock, self._conn:
             self._conn.execute("CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
@@ -35,6 +37,15 @@ class KeyValueStore:
     def delete(self, key: str) -> None:
         with self._lock, self._conn:
             self._conn.execute("DELETE FROM kv WHERE key = ?", (key,))
+
+    def execute(self, sql: str, params: tuple = ()) -> int:
+        """Run a write statement in a transaction; returns the last inserted row id."""
+        with self._lock, self._conn:
+            return self._conn.execute(sql, params).lastrowid
+
+    def fetch(self, sql: str, params: tuple = ()) -> list[sqlite3.Row]:
+        with self._lock:
+            return self._conn.execute(sql, params).fetchall()
 
     def close(self) -> None:
         with self._lock:
