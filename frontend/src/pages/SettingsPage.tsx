@@ -19,7 +19,9 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Typography,
+  useMediaQuery,
 } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getSettings, listModels, testConnection, updateSettings } from '../api/client'
 import { SETTINGS_QUERY_KEY } from '../api/queryKeys'
@@ -31,6 +33,7 @@ import {
   type SettingsUpdate,
   type UserSettings,
 } from '../api/types'
+import LoadErrorAlert from '../components/LoadErrorAlert'
 import PageHeader from '../components/PageHeader'
 import ApiKeyField from '../settings/ApiKeyField'
 import ModelPicker from '../settings/ModelPicker'
@@ -46,7 +49,10 @@ const NO_KEYS: Record<HostedProvider, string> = { anthropic: '', openai: '' }
 const NO_REMOVALS: Record<HostedProvider, boolean> = { anthropic: false, openai: false }
 
 export default function SettingsPage() {
-  const { data, error, isPending } = useQuery({ queryKey: SETTINGS_QUERY_KEY, queryFn: getSettings })
+  const { data, error, isPending, isFetching, refetch } = useQuery({
+    queryKey: SETTINGS_QUERY_KEY,
+    queryFn: getSettings,
+  })
   // Bumped after a save so the form re-initialises from what the server stored.
   const [formVersion, setFormVersion] = useState(0)
   // Lives here, not in the form, because the form remounts after a save.
@@ -56,7 +62,7 @@ export default function SettingsPage() {
     <>
       <PageHeader title="Settings" subtitle="Choose the model that scores resumes and manage API keys." />
       {isPending && <CircularProgress aria-label="Loading settings" />}
-      {error && <Alert severity="error">{error.message}</Alert>}
+      {error && <LoadErrorAlert what="settings" error={error} onRetry={() => void refetch()} retrying={isFetching} />}
       {data && (
         <SettingsForm
           key={formVersion}
@@ -94,6 +100,8 @@ function SettingsForm({ saved, onSaved }: SettingsFormProps) {
   const [testResult, setTestResult] = useState<ConnectionResult | null>(null)
 
   const hosted = provider === 'ollama' ? null : provider
+  // Three wide buttons don't fit side by side on a phone; stack them so the group borders stay intact.
+  const stackProviders = useMediaQuery(useTheme().breakpoints.down('sm'))
   const model = models[provider]
   const newKey = hosted ? newKeys[hosted].trim() : ''
 
@@ -156,7 +164,7 @@ function SettingsForm({ saved, onSaved }: SettingsFormProps) {
               }
             }}
             aria-label="Model provider"
-            sx={{ flexWrap: { xs: 'wrap', sm: 'nowrap' } }}
+            orientation={stackProviders ? 'vertical' : 'horizontal'}
           >
             {PROVIDERS.map((p) => (
               <ToggleButton key={p.id} value={p.id} sx={{ py: 1.5, gap: 1.5, justifyContent: 'flex-start' }}>
@@ -201,29 +209,30 @@ function SettingsForm({ saved, onSaved }: SettingsFormProps) {
               onRefresh={() => void modelList.refetch()}
               suggestedHint="Suggested models. Add an API key to load your account's full list."
             />
-            <Box>
+            <Box sx={{ maxWidth: 380 }}>
               <Typography id="temperature-label" variant="subtitle2">
                 Temperature: {temperature.toFixed(1)}
               </Typography>
-              <Slider
-                aria-labelledby="temperature-label"
-                value={temperature}
-                onChange={(_, v) => setTemperature(v as number)}
-                min={0}
-                max={1}
-                step={0.1}
-                marks={[
-                  { value: 0, label: 'Consistent' },
-                  { value: 1, label: 'Varied' },
-                ]}
-                sx={{
-                  maxWidth: 360,
-                  mx: 1,
-                  // Keep the end labels inside the card instead of centring them past its edges.
-                  '& .MuiSlider-markLabel[data-index="0"]': { transform: 'translateX(-8px)' },
-                  '& .MuiSlider-markLabel[data-index="1"]': { transform: 'translateX(calc(-100% + 8px))' },
-                }}
-              />
+              {/* Side padding on a wrapper: margin on the Slider itself would add to its 100% width. */}
+              <Box sx={{ px: 1 }}>
+                <Slider
+                  aria-labelledby="temperature-label"
+                  value={temperature}
+                  onChange={(_, v) => setTemperature(v as number)}
+                  min={0}
+                  max={1}
+                  step={0.1}
+                  marks={[
+                    { value: 0, label: 'Consistent' },
+                    { value: 1, label: 'Varied' },
+                  ]}
+                  sx={{
+                    // Keep the end labels inside the card instead of centring them past its edges.
+                    '& .MuiSlider-markLabel[data-index="0"]': { transform: 'translateX(-8px)' },
+                    '& .MuiSlider-markLabel[data-index="1"]': { transform: 'translateX(calc(-100% + 8px))' },
+                  }}
+                />
+              </Box>
               <Typography variant="caption" color="text.secondary" component="p">
                 0 gives the most repeatable scores for the same inputs.
               </Typography>

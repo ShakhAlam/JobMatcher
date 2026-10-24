@@ -1,24 +1,14 @@
 import { useState } from 'react'
 import DeleteSweepOutlined from '@mui/icons-material/DeleteSweepOutlined'
 import HistoryOutlined from '@mui/icons-material/HistoryOutlined'
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CircularProgress,
-  Divider,
-  List,
-  ListItemButton,
-  Stack,
-  Typography,
-} from '@mui/material'
+import { Box, Button, Card, CircularProgress, Divider, List, ListItemButton, Stack, Typography } from '@mui/material'
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link as RouterLink } from 'react-router'
 import { clearHistory, listHistory } from '../api/client'
 import { HISTORY_QUERY_KEY } from '../api/queryKeys'
 import { PROVIDER_NAMES } from '../api/types'
 import ConfirmDialog from '../components/ConfirmDialog'
+import LoadErrorAlert from '../components/LoadErrorAlert'
 import PageHeader from '../components/PageHeader'
 import Placeholder from '../components/Placeholder'
 import VerdictChip from '../history/VerdictChip'
@@ -30,7 +20,7 @@ export default function HistoryPage() {
   const queryClient = useQueryClient()
   const [limit, setLimit] = useState(PAGE_SIZE)
   const [confirmClear, setConfirmClear] = useState(false)
-  const { data, error, isPending, isFetching } = useQuery({
+  const { data, error, isPending, isFetching, refetch } = useQuery({
     queryKey: [...HISTORY_QUERY_KEY, 'list', limit],
     queryFn: () => listHistory(limit),
     // Keep the current rows on screen while "Show more" loads the next page.
@@ -62,7 +52,7 @@ export default function HistoryPage() {
       />
 
       {isPending && <CircularProgress aria-label="Loading history" />}
-      {error && <Alert severity="error">{error.message}</Alert>}
+      {error && <LoadErrorAlert what="history" error={error} onRetry={() => void refetch()} retrying={isFetching} />}
 
       {data && total === 0 && (
         <Stack spacing={2} sx={{ alignItems: 'center' }}>
@@ -99,7 +89,16 @@ export default function HistoryPage() {
                     <Typography sx={{ fontWeight: 600 }} noWrap>
                       {item.job_title}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" noWrap>
+                    {/* One line with an ellipsis on wider screens; wraps on phones so the model stays visible. */}
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        whiteSpace: { xs: 'normal', sm: 'nowrap' },
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
                       {[
                         item.candidate,
                         formatWhen(item.created_at),
@@ -109,7 +108,10 @@ export default function HistoryPage() {
                         .join('  ·  ')}
                     </Typography>
                   </Box>
-                  <VerdictChip score={item.overall_score} />
+                  {/* When the row wraps on phones, line the chip up under the text, not the score. */}
+                  <Box sx={{ ml: { xs: '64px', sm: 0 } }}>
+                    <VerdictChip score={item.overall_score} />
+                  </Box>
                 </ListItemButton>
               </Box>
             ))}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Box, Toolbar, useMediaQuery } from '@mui/material'
+import { Box, LinearProgress, Toolbar, useMediaQuery } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
-import { Outlet } from 'react-router'
+import { Outlet, useNavigation } from 'react-router'
 import SideNav from './SideNav'
 import TopBar from './TopBar'
 
@@ -20,6 +20,8 @@ export default function AppShell() {
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'))
   const [desktopExpanded, setDesktopExpanded] = useState(readExpanded)
   const [mobileOpen, setMobileOpen] = useState(false)
+  // True while a lazy page's code is downloading after a link click.
+  const pageLoading = useNavigation().state === 'loading'
 
   useEffect(() => {
     try {
@@ -34,6 +36,12 @@ export default function AppShell() {
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       <TopBar onMenuClick={toggleNav} />
+      {pageLoading && (
+        <LinearProgress
+          aria-label="Loading page"
+          sx={(t) => ({ position: 'fixed', top: 0, left: 0, right: 0, zIndex: t.zIndex.drawer + 2, height: 2 })}
+        />
+      )}
       <SideNav
         variant={isDesktop ? 'permanent' : 'temporary'}
         open={isDesktop ? desktopExpanded : mobileOpen}

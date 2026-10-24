@@ -20,6 +20,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getProfile, updateProfile } from '../api/client'
 import { PROFILE_QUERY_KEY } from '../api/queryKeys'
 import type { Profile } from '../api/types'
+import LoadErrorAlert from '../components/LoadErrorAlert'
 import PageHeader from '../components/PageHeader'
 import { initials } from '../components/initials'
 import DocumentInput from '../score/DocumentInput'
@@ -27,7 +28,7 @@ import DocumentInput from '../score/DocumentInput'
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export default function ProfilePage() {
-  const { data, error, isPending } = useQuery({ queryKey: PROFILE_QUERY_KEY, queryFn: getProfile })
+  const { data, error, isPending, isFetching, refetch } = useQuery({ queryKey: PROFILE_QUERY_KEY, queryFn: getProfile })
   // Bumped after a save so the form re-initialises from what the server stored.
   const [formVersion, setFormVersion] = useState(0)
   const [toast, setToast] = useState<string | null>(null)
@@ -36,7 +37,9 @@ export default function ProfilePage() {
     <>
       <PageHeader title="Profile" subtitle="Your details and the default resume used for scoring." />
       {isPending && <CircularProgress aria-label="Loading profile" />}
-      {error && <Alert severity="error">{error.message}</Alert>}
+      {error && (
+        <LoadErrorAlert what="your profile" error={error} onRetry={() => void refetch()} retrying={isFetching} />
+      )}
       {data && (
         <ProfileForm
           key={formVersion}

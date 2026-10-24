@@ -424,6 +424,9 @@ text (the backend does not stream progress).
 | Light or dark mode | `localStorage` `jobmatcher.color-mode`, applied by a script in `index.html` before React loads | Survives reloads |
 | Sidebar expanded or collapsed | `localStorage` `jobmatcher.sidenav.expanded` | Survives reloads |
 
+Pages other than Score are lazy routes; see [Design decisions](#design-decisions) for how the bundle is
+split.
+
 In development, Vite proxies `/api` to `http://localhost:8000` with a 15-minute timeout, because a
 local model can take minutes to score.
 
@@ -474,10 +477,19 @@ and becomes several times slower (see the model guide in [Getting started](getti
 **API keys are masked on the way out.** The browser only ever receives a preview like `sk-ant…WXYZ`;
 model lists and connection tests send a newly typed key in a POST body, never in a URL.
 
-**Charts are accessible and lazy.** One series means one color for every bar and no legend; values sit
-at the bar tips, and the per-criterion breakdown doubles as the table view. Verdict colors always come
-with an icon and a label. The chart library loads only when a result is shown, keeping it out of the
-first page load.
+**Charts are accessible.** One series means one color for every bar and no legend; values sit at the
+bar tips, and the per-criterion breakdown doubles as the table view. Verdict colors always come with an
+icon and a label.
+
+**Code is loaded when it is needed.** The Score page is in the main bundle; History, Profile and
+Settings use React Router's `lazy` routes and download on first visit (a thin bar under the app bar
+shows while they load). The results view, with the chart library, loads only when a result is shown.
+React and MUI are split into their own long-lived chunks (`build.rolldownOptions.output.codeSplitting`
+in `vite.config.ts`), so app updates don't invalidate them in the browser cache. The first load is
+about 760 kB (240 kB gzipped), almost all of it React and MUI.
+
+**Failed loads say so quickly.** Data queries retry once, then the page shows what failed with a
+**Try again** button rather than spinning through repeated retries.
 
 **Works with high-contrast modes.** Colors come from CSS variables, and the selected sidebar item gets
 an outline under Windows contrast themes, where background colors are replaced.

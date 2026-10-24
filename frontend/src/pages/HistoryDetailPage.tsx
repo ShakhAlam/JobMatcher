@@ -21,6 +21,7 @@ import { ApiError, deleteHistoryEntry, getHistoryEntry } from '../api/client'
 import { HISTORY_QUERY_KEY } from '../api/queryKeys'
 import { PROVIDER_NAMES } from '../api/types'
 import ConfirmDialog from '../components/ConfirmDialog'
+import LoadErrorAlert from '../components/LoadErrorAlert'
 import PageHeader from '../components/PageHeader'
 import { formatWhen } from '../history/formatWhen'
 import { useScoreWorkspace } from '../score/workspace'
@@ -64,6 +65,8 @@ export default function HistoryDetailPage() {
     data: entry,
     error,
     isPending,
+    isFetching,
+    refetch,
   } = useQuery({
     queryKey: [...HISTORY_QUERY_KEY, 'entry', id],
     queryFn: () => getHistoryEntry(id),
@@ -92,7 +95,14 @@ export default function HistoryDetailPage() {
       </>
     )
   }
-  if (error) return <Alert severity="error">{error.message}</Alert>
+  if (error) {
+    return (
+      <>
+        {back}
+        <LoadErrorAlert what="this scoring run" error={error} onRetry={() => void refetch()} retrying={isFetching} />
+      </>
+    )
+  }
   if (isPending || !entry) return <CircularProgress aria-label="Loading scoring run" />
 
   const subtitle = [

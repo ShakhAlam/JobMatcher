@@ -7,6 +7,21 @@ const backendUrl = process.env.JOBMATCHER_API_URL ?? 'http://localhost:8000'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  build: {
+    rolldownOptions: {
+      output: {
+        // Long-lived libraries in their own chunks: cached across app updates, and no single chunk
+        // trips the 500 kB warning. MUI X Charts is left out so it stays in the lazy results chunk.
+        codeSplitting: {
+          groups: [
+            // [\\/] matches both path separators.
+            { name: 'react', test: /node_modules[\\/](react|react-dom|scheduler|react-router)[\\/]/, priority: 20 },
+            { name: 'mui', test: /node_modules[\\/](@mui[\\/](?!x-)|@emotion[\\/])/, priority: 10 },
+          ],
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     proxy: {

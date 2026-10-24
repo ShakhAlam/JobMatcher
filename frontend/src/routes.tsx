@@ -1,28 +1,34 @@
+import type { ComponentType } from 'react'
 import type { RouteObject } from 'react-router'
+import StartupFallback from './components/StartupFallback'
 import AppShell from './layout/AppShell'
-import HistoryDetailPage from './pages/HistoryDetailPage'
-import HistoryPage from './pages/HistoryPage'
-import NotFoundPage from './pages/NotFoundPage'
-import ProfilePage from './pages/ProfilePage'
 import RouteError from './pages/RouteError'
 import ScorePage from './pages/ScorePage'
-import SettingsPage from './pages/SettingsPage'
+
+/**
+ * Load a page's code only when it is first visited. The Score page is the landing page, so it
+ * stays in the main bundle; the router waits for a lazy page before switching to it.
+ */
+function page(load: () => Promise<{ default: ComponentType }>): RouteObject['lazy'] {
+  return async () => ({ Component: (await load()).default })
+}
 
 export const routes: RouteObject[] = [
   {
     path: '/',
     element: <AppShell />,
+    hydrateFallbackElement: <StartupFallback />,
     children: [
       {
         // Pathless wrapper: a page error renders inside the shell, keeping the sidebar usable.
         errorElement: <RouteError />,
         children: [
           { index: true, element: <ScorePage /> },
-          { path: 'history', element: <HistoryPage /> },
-          { path: 'history/:id', element: <HistoryDetailPage /> },
-          { path: 'profile', element: <ProfilePage /> },
-          { path: 'settings', element: <SettingsPage /> },
-          { path: '*', element: <NotFoundPage /> },
+          { path: 'history', lazy: page(() => import('./pages/HistoryPage')) },
+          { path: 'history/:id', lazy: page(() => import('./pages/HistoryDetailPage')) },
+          { path: 'profile', lazy: page(() => import('./pages/ProfilePage')) },
+          { path: 'settings', lazy: page(() => import('./pages/SettingsPage')) },
+          { path: '*', lazy: page(() => import('./pages/NotFoundPage')) },
         ],
       },
     ],
